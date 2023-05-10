@@ -107,11 +107,11 @@ public class EruptMenuService implements DataProxy<EruptMenu> {
                     if (counter > 0) {
                         // 查询有权限菜单
                         Integer realCounter = eruptDao.getJdbcTemplate().queryForObject(
-                                String.format("select count(*) from e_upms_menu where parent_menu_id = %d and value like '%s@%%'", eruptMenu.getId(), eruptMenu.getValue()), Integer.class
+                                String.format("select count(*) from e_upms_menu where parent_menu_id = %d and menu_value like '%s@%%'", eruptMenu.getId(), eruptMenu.getValue()), Integer.class
                         );
                         // 如果没有查询出权限菜单，那么本次修改Value
                         if (null != realCounter && realCounter == 0) {
-                            eruptDao.getJdbcTemplate().update(String.format("delete from e_upms_menu where parent_menu_id = %d and value like '%%@%%'", eruptMenu.getId()));
+                            eruptDao.getJdbcTemplate().update(String.format("delete from e_upms_menu where parent_menu_id = %d and menu_value like '%%@%%'", eruptMenu.getId()));
                             counter = 0;
                         }
                     }
