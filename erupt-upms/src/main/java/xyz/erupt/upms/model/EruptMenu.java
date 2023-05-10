@@ -78,6 +78,7 @@ public class EruptMenu extends MetaModel {
                     choiceType = @ChoiceType(fetchHandler = MenuTypeEnum.ChoiceFetch.class)
             )
     )
+    @Column(name = "menu_type")
     private String type;
 
     @EruptField(
@@ -85,6 +86,7 @@ public class EruptMenu extends MetaModel {
                     title = "类型值"
             )
     )
+    @Column(name = "menu_value")
     private String value;
 
     @EruptField(
