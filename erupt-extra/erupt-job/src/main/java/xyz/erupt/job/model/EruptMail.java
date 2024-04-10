@@ -68,7 +68,7 @@ public class EruptMail extends BaseModel {
     )
     private Boolean status;
 
-    @Lob
+    @Column(name = "content")
     @Type(type = "org.hibernate.type.TextType")
     @EruptField(
             views = @View(title = "内容"),
@@ -76,7 +76,7 @@ public class EruptMail extends BaseModel {
     )
     private String content;
 
-    @Column(length = 5000)
+    @Column(name = "error_info")
     private String errorInfo;
 
     @EruptField(
