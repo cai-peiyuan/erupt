@@ -8,6 +8,7 @@ import xyz.erupt.tpl.annotation.TplAction;
 import xyz.erupt.upms.service.EruptContextService;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,6 +27,9 @@ public class MagicApiTpl {
 
     @Resource
     private EruptContextService eruptContextService;
+
+    @Resource
+    private HttpServletRequest request;
 
     @TplAction(MAGIC_API_PERMISSION)
     public Map<String, Object> magicApiAction() {
