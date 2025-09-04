@@ -1,6 +1,8 @@
 package xyz.erupt.job.service;
 
 import lombok.SneakyThrows;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.stereotype.Component;
@@ -22,12 +24,15 @@ import java.util.*;
  * date 2021/2/27 22:46
  */
 @Component
-public class EruptJobFetch implements ChoiceFetchHandler, ChoiceTrigger {
+public class EruptJobFetch implements ChoiceFetchHandler, ChoiceTrigger, ApplicationListener<ContextRefreshedEvent> {
 
     private static final List<VLModel> loadedJobHandler = new ArrayList<>();
 
-    @PostConstruct
-    public void init() {
+    /**
+     * 在 Spring 容器刷新完成后执行
+     */
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
         EruptSpringUtil.scannerPackage(EruptApplication.getScanPackage(), new TypeFilter[]{new AssignableTypeFilter(EruptJobHandler.class)}, clazz -> {
             EruptHandlerNaming eruptHandlerNaming = clazz.getAnnotation(EruptHandlerNaming.class);
             if (null == eruptHandlerNaming) {
