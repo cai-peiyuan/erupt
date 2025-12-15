@@ -1,5 +1,6 @@
 package xyz.erupt.job.service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -16,7 +17,6 @@ import xyz.erupt.job.handler.EruptJobHandler;
 import xyz.erupt.job.model.EruptJob;
 import xyz.erupt.linq.lambda.LambdaSee;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**
