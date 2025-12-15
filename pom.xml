@@ -45,8 +45,6 @@
         <module>erupt-websocket</module>
         <!-- Front-end Code -->
         <module>erupt-web</module>
-        <module>erupt-websocket</module><!--websocket-->
-        <module>erupt-web</module><!--前端代码-->
         <module>erupt-web-pro</module><!--前端代码-->
 
         <module>erupt-tpl</module>
