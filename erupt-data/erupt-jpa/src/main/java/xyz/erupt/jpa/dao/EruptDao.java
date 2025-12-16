@@ -13,6 +13,8 @@ import xyz.erupt.annotation.config.Comment;
 import xyz.erupt.jpa.service.EntityManagerService;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author YuePeng
@@ -123,7 +125,7 @@ public class EruptDao {
 
     //不存在则新增
     public <T> T persistIfNotExist(Class<T> eruptClass, T obj, String expr, Map<String, Object> param) throws NonUniqueResultException {
-        T t = (T) queryEntity(eruptClass, expr, param);
+        T t = this.lambdaQuery(eruptClass).addCondition(expr, param).one();
         if (null == t) {
             entityManager.persist(obj);
             entityManager.flush();
@@ -132,4 +134,15 @@ public class EruptDao {
         return t;
     }
 
+    public <T> T queryEntity(Class<T> eruptClass, String expr, Map<String, Object> param) {
+        return this.lambdaQuery(eruptClass).addCondition(expr, param).one();
+    }
+
+    public <T> List<T> queryEntityList(Class<T> eruptClass, String expr, Map<String, Object> param) {
+        return this.lambdaQuery(eruptClass).addCondition(expr, param).list();
+    }
+
+    public <T> List<T> queryEntityList(Class<T> eruptClass) {
+        return this.lambdaQuery(eruptClass).list();
+    }
 }

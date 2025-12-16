@@ -67,7 +67,7 @@ public class EruptMail extends BaseModel {
     )
     private Boolean status;
 
-    @Type(type = "org.hibernate.type.TextType")
+   // @Type(type = "org.hibernate.type.TextType")
     @Column(name = "content", length = AnnotationConst.CONFIG_LENGTH)
     @EruptField(
             views = @View(title = "内容"),
