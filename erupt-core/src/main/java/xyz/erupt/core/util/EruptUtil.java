@@ -1,6 +1,7 @@
 package xyz.erupt.core.util;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.SneakyThrows;
@@ -38,6 +39,7 @@ import xyz.erupt.core.view.EruptModel;
 import xyz.erupt.linq.lambda.LambdaSee;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -337,7 +339,9 @@ public class EruptUtil {
             }
         }
         try {
-            DataProxyInvoke.invoke(eruptModel, (dataProxy -> dataProxy.validate(GsonFactory.getGson().fromJson(jsonObject.toString(), eruptModel.getClazz()))));
+            DataProxyInvoke.invoke(eruptModel, (dataProxy -> dataProxy.validate(new GsonBuilder()
+                    .excludeFieldsWithModifiers(Modifier.STATIC, Modifier.TRANSIENT, Modifier.VOLATILE)
+                    .create().fromJson(jsonObject.toString(), eruptModel.getClazz()))));
         } catch (EruptException e) {
             return EruptApiModel.errorMessageApi(e.getMessage());
         }

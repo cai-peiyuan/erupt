@@ -115,7 +115,8 @@ public class EruptUser extends LookerSelf {
     @ManyToOne
     @EruptField(
             views = @View(title = "所属组织", column = "name"),
-            edit = @Edit(title = "所属组织", type = EditType.REFERENCE_TREE, referenceTreeType = @ReferenceTreeType(pid = "parentOrg.id"))
+            edit = @Edit(title = "所属组织", type = EditType.REFERENCE_TREE,
+                    referenceTreeType = @ReferenceTreeType(pid = "parentOrg.id"))
     )
     private EruptOrg eruptOrg;
 
