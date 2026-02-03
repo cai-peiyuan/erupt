@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>xyz.erupt</groupId>
     <artifactId>erupt</artifactId>
-    <version>1.13.2</version>
+    <version>1.13.3</version>
 
     <packaging>pom</packaging>
     <name>erupt</name>
@@ -45,6 +45,8 @@
         <module>erupt-websocket</module>
         <!-- Notice -->
         <module>erupt-notice</module>
+        <!-- Print -->
+        <module>erupt-print</module>
         <!-- Front-end Code -->
         <module>erupt-web</module>
 

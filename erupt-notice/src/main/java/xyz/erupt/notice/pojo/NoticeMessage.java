@@ -18,6 +18,8 @@ public class NoticeMessage {
 
     private String url;
 
+//    private NoticeUrlOpenWay urlOpenWay = NoticeUrlOpenWay.DRAWER;
+
     private Map<String, Object> params = new HashMap<>();
 
 }

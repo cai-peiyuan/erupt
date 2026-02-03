@@ -3,6 +3,7 @@ package xyz.erupt.ai.service;
 import jakarta.annotation.Resource;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -83,7 +84,9 @@ public class LLMService {
             }
         } else {
             // Function Call
-            chatCompletionMessages.add(new ChatCompletionMessage(MessageRole.system, aiFunctionManager.getFunctionCallPrompt()));
+            if (aiProp.isEnableFunctionCall()) {
+                chatCompletionMessages.add(new ChatCompletionMessage(MessageRole.system, aiFunctionManager.getFunctionCallPrompt()));
+            }
         }
         List<ChatMessage> chatMessages = eruptDao.lambdaQuery(ChatMessage.class)
                 .eq(ChatMessage::getChatId, chat.getId())
@@ -110,9 +113,18 @@ public class LLMService {
             llm.chatSse(llmRequest, chatMessage.getContent(), completionMessage, it -> {
                 if (it.isFinish()) {
                     String msg = it.getOutput().toString();
-                    if (it.getOutput().toString().length() <= MESSAGE_TS || it.isError()) {
-                        msg = this.sendMessage(emitter, it.getOutput().toString(), llmModal, chatMessage, completionMessage);
+                    // finish 时，无论之前发送了多少，都要确保最后的增量被发送
+                    if (msg.length() > MESSAGE_TS && !it.isError()) {
+                        // 只发送最后的增量部分
+                        if (!StringUtils.isEmpty(it.getCurrMessage())) {
+                            this.sendMessage(emitter, it.getCurrMessage(), llmModal, chatMessage, completionMessage);
+                        }
+                    } else {
+                        // 短消息直接发送完整内容
+                        msg = this.sendMessage(emitter, msg, llmModal, chatMessage, completionMessage);
                     }
+
+                    // 保存到数据库时使用完整消息
                     chatMessage.setTokens((long) it.getUsage().getPrompt_tokens());
                     eruptDao.mergeAndFlush(chatMessage);
                     eruptDao.persistAndFlush(ChatMessage.create(chatMessage.getChatId(), llmModal.getLlm(), llmModal.getModel(), ChatSenderType.MODEL, msg, (long) it.getUsage().getCompletion_tokens()));
@@ -138,7 +150,7 @@ public class LLMService {
     }
 
     private String sendMessage(SseEmitter emitter, String userMessage, LLM llm, ChatMessage chatMessage, List<ChatCompletionMessage> userContext) {
-        if (aiFunctionManager.exist(userMessage.trim())) {
+        if (aiProp.isEnableFunctionCall() && aiFunctionManager.exist(userMessage.trim())) {
             String functionMessage = aiFunctionManager.call(userMessage, llm, chatMessage.getContent(), userContext);
             try {
                 emitter.send(GsonFactory.getGson().toJson(new SseBody(functionMessage)), MediaType.TEXT_EVENT_STREAM);
