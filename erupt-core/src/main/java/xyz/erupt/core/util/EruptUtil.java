@@ -55,8 +55,12 @@ import java.util.stream.Stream;
 public class EruptUtil {
 
     // Extract the field marked as "erupt" from the "object" and place it into the "map".
+
+    /**
+     * @param valueMapping 是否映射为真实值
+     */
     @SneakyThrows
-    public static Map<String, Object> generateEruptDataMap(EruptModel eruptModel, Object obj) {
+    public static Map<String, Object> generateEruptDataMap(EruptModel eruptModel, Object obj, boolean valueMapping) {
         Map<String, Object> map = new HashMap<>();
         for (EruptFieldModel fieldModel : eruptModel.getEruptFieldModels()) {
             if (AnnotationConst.EMPTY_STR.equals(fieldModel.getEruptField().edit().title()) &&
@@ -105,12 +109,11 @@ public class EruptUtil {
                             Object columnValue = ReflectUtil.findFieldChain(view.column(), value);
                             referMap.put(columnKey, columnValue);
                             map.put(field.getName() + "_" + columnKey, columnValue);
-
                         }
                         map.put(field.getName(), referMap);
                         break;
                     case COMBINE:
-                        map.put(field.getName(), generateEruptDataMap(EruptCoreService.getErupt(fieldModel.getFieldReturnName()), value));
+                        map.put(field.getName(), generateEruptDataMap(EruptCoreService.getErupt(fieldModel.getFieldReturnName()), value, valueMapping));
                         break;
                     case CHECKBOX:
                     case TAB_TREE:
@@ -132,10 +135,20 @@ public class EruptUtil {
                         Collection<?> collectionRef = (Collection<?>) value;
                         List<Object> list = new ArrayList<>();
                         for (Object o : collectionRef) {
-                            list.add(generateEruptDataMap(tabEruptModelRef, o));
+                            list.add(generateEruptDataMap(tabEruptModelRef, o, valueMapping));
                         }
                         map.put(field.getName(), list);
                         break;
+                    case CHOICE:
+                        if (valueMapping) {
+                            Map<String, String> kv = EruptUtil.getChoiceMap(eruptModel, eruptField.edit());
+                            if (kv.containsKey(value.toString())) {
+                                map.put(field.getName(), kv.get(value.toString()));
+                            } else {
+                                map.put(field.getName(), value);
+                            }
+                            break;
+                        }
                     default:
                         if (value instanceof Date d) {
                             map.put(field.getName(), DateUtil.getFormatDate(d, DateUtil.ISO_8601));
@@ -151,6 +164,11 @@ public class EruptUtil {
             }
         }
         return map;
+    }
+
+    @SneakyThrows
+    public static Map<String, Object> generateEruptDataViewMap(EruptModel eruptModel, Object obj) {
+        return null;
     }
 
     public static Map<String, String> getChoiceMap(EruptModel eruptModel, Edit edit) {
@@ -311,8 +329,10 @@ public class EruptUtil {
             }
             if (!AnnotationConst.EMPTY_STR.equals(edit.dynamic().condition())) {
                 if (null == value || value.isJsonNull()) {
-                    boolean dynamic = ScriptUtil.eval("!!(" + edit.dynamic().condition() + ")",
-                            Map.of(LambdaSee.field(Dynamic.Var::getValue), jsonObject.get(edit.dynamic().dependField()).getAsString()), boolean.class);
+                    Object dependFieldValue = null == jsonObject.get(edit.dynamic().dependField()) ? null : jsonObject.get(edit.dynamic().dependField()).getAsString();
+                    Map<String, Object> vars = new HashMap<>();
+                    vars.put(LambdaSee.field(Dynamic.Var::getValue), dependFieldValue);
+                    boolean dynamic = ScriptUtil.eval("!!(" + edit.dynamic().condition() + ")", vars, boolean.class);
                     Dynamic.Ctrl strategy = dynamic ? edit.dynamic().match() : edit.dynamic().noMatch();
                     if (strategy == Dynamic.Ctrl.NOTNULL) {
                         return EruptApiModel.errorMessageApi(edit.title() + " " + I18nTranslate.$translate("erupt.notnull"));

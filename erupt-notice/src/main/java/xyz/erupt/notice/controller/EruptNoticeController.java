@@ -11,11 +11,14 @@ import xyz.erupt.core.constant.EruptRestPath;
 import xyz.erupt.core.view.R;
 import xyz.erupt.core.view.SimplePage;
 import xyz.erupt.jpa.dao.EruptDao;
+import xyz.erupt.linq.lambda.LambdaSee;
 import xyz.erupt.notice.channel.AbstractNoticeChannel;
 import xyz.erupt.notice.channel.EruptInternalNotice;
 import xyz.erupt.notice.constant.NoticeStatus;
 import xyz.erupt.notice.modal.NoticeAnnouncement;
+import xyz.erupt.notice.modal.NoticeLog;
 import xyz.erupt.notice.modal.NoticeLogDetail;
+import xyz.erupt.notice.modal.NoticeScene;
 import xyz.erupt.upms.annotation.EruptLoginAuth;
 import xyz.erupt.upms.model.EruptUserVo;
 import xyz.erupt.upms.service.EruptUserService;
@@ -44,14 +47,28 @@ public class EruptNoticeController {
                 .map(h -> new VLModel(h.code(), h.name())).toList());
     }
 
+    @GetMapping("/scenes")
+    public R<List<NoticeScene>> scenes() {
+        List<Long> scenes = eruptDao.lambdaQuery(NoticeLogDetail.class)
+                .eq(NoticeLogDetail::getChannel, eruptInternalNotice.code()).eq(NoticeLogDetail::getSuccess, true)
+                .with(NoticeLogDetail::getReceiveUser).eq(EruptUserVo::getId, eruptUserService.getCurrentUid()).with()
+                .selectByPath(Long.class, "distinct " + LambdaSee.field(NoticeLogDetail::getNoticeLog) + "." + LambdaSee.field(NoticeLog::getNoticeScene) + "." + LambdaSee.field(NoticeScene::getId));
+        return R.ok(eruptDao.lambdaQuery(NoticeScene.class).in(NoticeScene::getId, scenes).list());
+    }
+
     @EruptLoginAuth
     @GetMapping("/messages")
-    public R<SimplePage<NoticeLogDetail>> messages(@RequestParam int page, @RequestParam int size, @RequestParam(required = false) String search) {
+    public R<SimplePage<NoticeLogDetail>> messages(@RequestParam int page, @RequestParam int size,
+                                                   @RequestParam(required = false) NoticeStatus status,
+                                                   @RequestParam(required = false) String search,
+                                                   @RequestParam(required = false) Long scene) {
         return R.ok(eruptDao.lambdaQuery(NoticeLogDetail.class)
                 .eq(NoticeLogDetail::getChannel, eruptInternalNotice.code())
                 .eq(NoticeLogDetail::getSuccess, true)
+                .eq(null != status, NoticeLogDetail::getStatus, status)
                 .with(NoticeLogDetail::getNoticeLog).like(null != search, NoticeAnnouncement::getTitle, search).with()
                 .with(NoticeLogDetail::getReceiveUser).eq(EruptUserVo::getId, eruptUserService.getCurrentUid()).with()
+                .with(NoticeLogDetail::getNoticeLog).with(NoticeLog::getNoticeScene).eq(null != scene, NoticeScene::getId, scene).with()
                 .orderByDesc(NoticeLogDetail::getCreateTime).page(size, (page - 1) * size));
     }
 
